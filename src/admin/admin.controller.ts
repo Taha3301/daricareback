@@ -6,6 +6,7 @@ import { Roles } from '../auth/roles.decorator';
 import { BookingsService } from '../bookings/bookings.service';
 import { AdminService } from './admin.service';
 import { BanUserDto } from './dto/ban-user.dto';
+import { UpdateWhatsappDto } from '../user/dto/update-whatsapp.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -52,5 +53,18 @@ export class AdminController {
         @Body() banUserDto: BanUserDto,
     ) {
         return this.adminService.banUser(+id, banUserDto.ban);
+    }
+
+    @Patch('users/:id/whatsapp')
+    @ApiOperation({ summary: 'Admin Only: Toggle WhatsApp status for a user' })
+    @ApiResponse({ status: 200, description: 'User WhatsApp status updated successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden: Only admins can change WhatsApp status' })
+    async toggleWhatsapp(
+        @Param('id') id: string,
+        @Body() updateWhatsappDto: UpdateWhatsappDto,
+    ) {
+        return this.adminService.updateWhatsappStatus(+id, updateWhatsappDto.whatsapp);
     }
 }

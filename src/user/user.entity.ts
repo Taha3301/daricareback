@@ -29,4 +29,7 @@ export class User {
 
     @Column({ default: false })
     ban: boolean;
+
+    @Column({ default: false })
+    whatsapp: boolean;
 }

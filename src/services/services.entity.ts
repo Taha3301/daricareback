@@ -12,6 +12,9 @@ export class Service {
     @Column()
     description: string;
 
+    @Column({ nullable: true })
+    image: string;
+
     @OneToMany(() => Soin, (soin) => soin.service)
     soins: Soin[];
 }

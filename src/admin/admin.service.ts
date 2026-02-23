@@ -8,6 +8,7 @@ import { Service } from '../services/services.entity';
 import { MedicalRequestProfessional } from '../bookings/entities/medical-request-professional.entity';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
+import { UpdateWhatsappDto } from '../user/dto/update-whatsapp.dto';
 
 @Injectable()
 export class AdminService {
@@ -134,6 +135,32 @@ export class AdminService {
       userId: user.id,
       email: user.email,
       ban: user.ban,
+    };
+  }
+
+  async updateWhatsappStatus(userId: number, status: boolean) {
+    // Try to find user in Admin repository
+    let user: any = await this.adminRepository.findOne({ where: { id: userId } });
+    let repo: Repository<any> = this.adminRepository;
+
+    // If not found in Admin, try Professional
+    if (!user) {
+      user = await this.professionalRepository.findOne({ where: { id: userId } });
+      repo = this.professionalRepository;
+    }
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    user.whatsapp = status;
+    await repo.save(user);
+
+    return {
+      message: `User WhatsApp status updated to ${status} successfully`,
+      userId: user.id,
+      email: user.email,
+      whatsapp: user.whatsapp,
     };
   }
 }

@@ -6,6 +6,9 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { Service } from './services.entity';
 import { Professional } from '../professional/entities/professional.entity';
 import { RequestDocument } from '../bookings/entities/request-document.entity';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class ServicesService {
@@ -18,8 +21,11 @@ export class ServicesService {
     private readonly requestDocumentRepository: Repository<RequestDocument>,
   ) { }
 
-  async create(createServiceDto: CreateServiceDto) {
-    const service = this.serviceRepository.create(createServiceDto);
+  async create(createServiceDto: CreateServiceDto, imagePath?: string) {
+    const service = this.serviceRepository.create({
+      ...createServiceDto,
+      image: imagePath,
+    });
     return await this.serviceRepository.save(service);
   }
 
@@ -111,9 +117,25 @@ export class ServicesService {
     };
   }
 
-  async update(id: number, updateServiceDto: UpdateServiceDto) {
+  async update(id: number, updateServiceDto: UpdateServiceDto, imagePath?: string) {
     const service = await this.findOne(id);
-    const updated = Object.assign(service, updateServiceDto);
+
+    if (imagePath && service.image) {
+      // Delete old image if it exists
+      const oldPath = join(process.cwd(), service.image);
+      if (existsSync(oldPath)) {
+        try {
+          await unlink(oldPath);
+        } catch (err) {
+          console.error(`Failed to delete old service image: ${oldPath}`, err);
+        }
+      }
+    }
+
+    const updated = Object.assign(service, {
+      ...updateServiceDto,
+      image: imagePath || service.image,
+    });
     return await this.serviceRepository.save(updated);
   }
 

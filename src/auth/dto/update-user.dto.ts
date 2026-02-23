@@ -37,4 +37,7 @@ export class UpdateUserDto {
 
     @ApiProperty({ required: false })
     longitude?: number;
+
+    @ApiProperty({ required: false })
+    whatsapp?: boolean;
 }

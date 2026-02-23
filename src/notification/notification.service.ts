@@ -6,6 +6,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { NotificationGateway } from './notification.gateway';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NotificationService {
@@ -14,6 +15,7 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
     private readonly notificationGateway: NotificationGateway,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
   ) { }
 
   async create(createNotificationDto: CreateNotificationDto, extraData?: any) {
@@ -53,7 +55,8 @@ export class NotificationService {
   }
 
   async sendResetPasswordEmail(email: string, token: string) {
-    const resetLink = `http://localhost:5173/reset-password?token=${token}`; // Update with actual frontend URL if needed
+    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
     await this.mailerService.sendMail({
       to: email,

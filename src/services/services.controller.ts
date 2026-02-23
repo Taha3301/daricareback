@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -9,6 +9,15 @@ import { Roles } from '../auth/roles.decorator';
 import { SoinsService } from '../soins/soins.service';
 import { CreateSoinDto } from '../soins/dto/create-soin.dto';
 import { Public } from '../auth/public.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+const uploadDir = './uploads/services';
+if (!existsSync(uploadDir)) {
+  mkdirSync(uploadDir, { recursive: true });
+}
 
 @ApiTags('Services')
 @Controller('services')
@@ -22,8 +31,30 @@ export class ServicesController {
 
   @Post()
   @ApiBearerAuth()
-  create(@Body() createServiceDto: CreateServiceDto) {
-    return this.servicesService.create(createServiceDto);
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Create a new service with an image' })
+  @UseInterceptors(FileInterceptor('image', {
+    storage: diskStorage({
+      destination: uploadDir,
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `service-${uniqueSuffix}${ext}`);
+      },
+    }),
+    fileFilter: (req, file, callback) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        return callback(new Error('Only images are allowed!'), false);
+      }
+      callback(null, true);
+    },
+  }))
+  create(
+    @Body() createServiceDto: CreateServiceDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    const imagePath = file ? `uploads/services/${file.filename}` : undefined;
+    return this.servicesService.create(createServiceDto, imagePath);
   }
 
   @Post(':id/soins')
@@ -41,8 +72,21 @@ export class ServicesController {
 
   @Get('only')
   @Public()
-  findAllOnly() {
-    return this.servicesService.findAllOnly();
+  async findAllOnly() {
+    console.log('Hitting /services/only endpoint');
+    try {
+      const result = await this.servicesService.findAllOnly();
+      console.log('Got result from service:');
+      try {
+        console.log(JSON.stringify(result).substring(0, 100)); // Log part of it
+      } catch (e) {
+        console.error('Serialization check failed:', e);
+      }
+      return result;
+    } catch (error) {
+      console.error('Error in /services/only:', error);
+      throw error;
+    }
   }
 
   @Get(':id')
@@ -60,8 +104,31 @@ export class ServicesController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
-    return this.servicesService.update(+id, updateServiceDto);
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Update a service and its image' })
+  @UseInterceptors(FileInterceptor('image', {
+    storage: diskStorage({
+      destination: uploadDir,
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `service-${uniqueSuffix}${ext}`);
+      },
+    }),
+    fileFilter: (req, file, callback) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        return callback(new Error('Only images are allowed!'), false);
+      }
+      callback(null, true);
+    },
+  }))
+  update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    const imagePath = file ? `uploads/services/${file.filename}` : undefined;
+    return this.servicesService.update(+id, updateServiceDto, imagePath);
   }
 
   @Delete(':id')

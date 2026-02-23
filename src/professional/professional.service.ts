@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Professional } from './entities/professional.entity';
@@ -109,5 +109,21 @@ export class ProfessionalService {
 
   remove(id: number) {
     return `This action removes a #${id} professional`;
+  }
+
+  async toggleWhatsappStatus(id: number) {
+    const professional = await this.professionalRepository.findOne({ where: { id } });
+    if (!professional) {
+      throw new NotFoundException(`Professional with ID ${id} not found`);
+    }
+
+    professional.whatsapp = !professional.whatsapp;
+    await this.professionalRepository.save(professional);
+
+    return {
+      message: `Your WhatsApp status is now ${professional.whatsapp ? 'active' : 'inactive'}`,
+      userId: professional.id,
+      whatsapp: professional.whatsapp,
+    };
   }
 }

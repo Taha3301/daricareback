@@ -15,6 +15,7 @@ import { NotificationService } from '../notification/notification.service';
 import * as crypto from 'crypto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -87,6 +88,27 @@ export class AuthService {
         await repo.save(user);
 
         return { message: 'Password has been reset successfully' };
+    }
+
+    async changePassword(userId: number, role: string, changePasswordDto: ChangePasswordDto) {
+        const { oldPassword, newPassword } = changePasswordDto;
+        const repo = (role === 'admin' ? this.adminRepository : this.proRepository) as Repository<any>;
+
+        const user = await repo.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const isOldPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isOldPasswordMatch) {
+            throw new UnauthorizedException('Current password (old password) is incorrect');
+        }
+
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+        await repo.save(user);
+
+        return { message: 'Password updated successfully' };
     }
 
     async registerAdmin(registerAdminDto: RegisterAdminDto) {
@@ -273,10 +295,10 @@ export class AuthService {
     }
 
     private filterUpdateData(data: UpdateUserDto, isProfessional: boolean): any {
-        const { speciality, cin, diploma, license, yearsOfExperience, adeliRppsNumber, professionalPhone, professionalAddress, city, latitude, longitude, ...baseData } = data;
+        const { speciality, cin, diploma, license, yearsOfExperience, adeliRppsNumber, professionalPhone, professionalAddress, city, latitude, longitude, whatsapp, ...baseData } = data;
         if (isProfessional) {
             return { ...data };
         }
-        return baseData;
+        return { ...baseData, whatsapp }; // Allow whatsapp for admins too
     }
 }

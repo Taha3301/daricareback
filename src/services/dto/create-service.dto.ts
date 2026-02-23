@@ -11,4 +11,7 @@ export class CreateServiceDto {
     @IsNotEmpty()
     @IsString()
     description: string;
+
+    @ApiProperty({ description: 'The image of the service', required: false, type: 'string', format: 'binary' })
+    image?: any;
 }

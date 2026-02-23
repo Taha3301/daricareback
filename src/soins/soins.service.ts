@@ -12,7 +12,11 @@ export class SoinsService {
     private readonly soinRepository: Repository<Soin>,
   ) { }
 
-  async create(createSoinDto: CreateSoinDto) {
+  async create(createSoinDto: CreateSoinDto | CreateSoinDto[]) {
+    if (Array.isArray(createSoinDto)) {
+      const soins = this.soinRepository.create(createSoinDto);
+      return await this.soinRepository.save(soins);
+    }
     const soin = this.soinRepository.create(createSoinDto);
     return await this.soinRepository.save(soin);
   }

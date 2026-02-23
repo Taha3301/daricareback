@@ -7,6 +7,7 @@ import { RegisterAdminDto } from './dto/register-admin.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
@@ -57,6 +58,17 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Invalid or expired token' })
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
         return this.authService.resetPassword(resetPasswordDto);
+    }
+
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Update password for authenticated user' })
+    @ApiResponse({ status: 200, description: 'Success: Password changed successfully' })
+    @ApiResponse({ status: 401, description: 'Invalid old password' })
+    async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+        return this.authService.changePassword(req.user.userId, req.user.role, changePasswordDto);
     }
 
     @Get('profile')

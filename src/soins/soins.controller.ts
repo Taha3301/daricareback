@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiBody, getSchemaPath, ApiExtraModels } from '@nestjs/swagger';
 import { SoinsService } from './soins.service';
 import { CreateSoinDto } from './dto/create-soin.dto';
 import { UpdateSoinDto } from './dto/update-soin.dto';
@@ -9,6 +9,7 @@ import { Roles } from '../auth/roles.decorator';
 
 @ApiTags('Soins')
 @ApiBearerAuth()
+@ApiExtraModels(CreateSoinDto)
 @Controller('soins')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
@@ -16,7 +17,16 @@ export class SoinsController {
   constructor(private readonly soinsService: SoinsService) { }
 
   @Post()
-  create(@Body() createSoinDto: CreateSoinDto) {
+  @ApiOperation({ summary: 'Create one or multiple soins' })
+  @ApiBody({
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(CreateSoinDto) },
+        { type: 'array', items: { $ref: getSchemaPath(CreateSoinDto) } }
+      ]
+    }
+  })
+  create(@Body() createSoinDto: CreateSoinDto | CreateSoinDto[]) {
     return this.soinsService.create(createSoinDto);
   }
 
