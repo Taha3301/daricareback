@@ -7,6 +7,7 @@ import { BookingsService } from '../bookings/bookings.service';
 import { AdminService } from './admin.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { UpdateWhatsappDto } from '../user/dto/update-whatsapp.dto';
+import { UpdateSuperadminDto } from './dto/update-superadmin.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -18,6 +19,15 @@ export class AdminController {
         private readonly bookingsService: BookingsService,
         private readonly adminService: AdminService,
     ) { }
+
+    @Get('users')
+    @ApiOperation({ summary: 'Admin Only: Get all admin users' })
+    @ApiResponse({ status: 200, description: 'Return all admin users (password excluded)' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden: Only admins can access this' })
+    async getAllAdmins() {
+        return this.adminService.getAllAdmins();
+    }
 
     @Get('dashboard/stats')
     @ApiOperation({ summary: 'Get summary statistics for the admin dashboard' })
@@ -66,5 +76,30 @@ export class AdminController {
         @Body() updateWhatsappDto: UpdateWhatsappDto,
     ) {
         return this.adminService.updateWhatsappStatus(+id, updateWhatsappDto.whatsapp);
+    }
+
+    @Patch('users/:id/superadmin')
+    @ApiOperation({ summary: 'Admin Only: Toggle superadmin status for a user' })
+    @ApiResponse({ status: 200, description: 'User superadmin status updated successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden: Only admins can change superadmin status' })
+    async toggleSuperadmin(
+        @Param('id') id: string,
+        @Body() updateSuperadminDto: UpdateSuperadminDto,
+    ) {
+        return this.adminService.updateSuperadminStatus(+id, updateSuperadminDto.superadmin);
+    }
+
+    @Get('users/:id/superadmin')
+    @ApiOperation({ summary: 'Admin Only: Get superadmin status for a user' })
+    @ApiResponse({ status: 200, description: 'User superadmin status retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'User not found' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden: Only admins can view superadmin status' })
+    async getSuperadmin(
+        @Param('id') id: string,
+    ) {
+        return this.adminService.getSuperadminStatus(+id);
     }
 }

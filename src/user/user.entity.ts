@@ -32,4 +32,7 @@ export class User {
 
     @Column({ default: false })
     whatsapp: boolean;
+
+    @Column({ default: false })
+    superadmin: boolean;
 }

@@ -23,8 +23,11 @@ export class AuthController {
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Admin Only: Register a new administrator' })
     @ApiResponse({ status: 201, description: 'Admin successfully registered' })
-    @ApiResponse({ status: 403, description: 'Forbidden: Only admins can register new admins' })
-    async adminRegister(@Body() registerAdminDto: RegisterAdminDto) {
+    @ApiResponse({ status: 403, description: 'Forbidden: Only super admins can register new admins' })
+    async adminRegister(@Request() req, @Body() registerAdminDto: RegisterAdminDto) {
+        if (!req.user?.superadmin) {
+            throw new ForbiddenException('Only super admins can register new admins');
+        }
         return this.authService.registerAdmin(registerAdminDto);
     }
 

@@ -33,6 +33,11 @@ export class AdminService {
     return `This action returns all admin`;
   }
 
+  async getAllAdmins() {
+    const admins = await this.adminRepository.find();
+    return admins.map(({ password, ...rest }) => rest);
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} admin`;
   }
@@ -161,6 +166,52 @@ export class AdminService {
       userId: user.id,
       email: user.email,
       whatsapp: user.whatsapp,
+    };
+  }
+
+  async updateSuperadminStatus(userId: number, status: boolean) {
+    // Try to find user in Admin repository
+    let user: any = await this.adminRepository.findOne({ where: { id: userId } });
+    let repo: Repository<any> = this.adminRepository;
+
+    // If not found in Admin, try Professional
+    if (!user) {
+      user = await this.professionalRepository.findOne({ where: { id: userId } });
+      repo = this.professionalRepository;
+    }
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    user.superadmin = status;
+    await repo.save(user);
+
+    return {
+      message: `User superadmin status updated to ${status} successfully`,
+      userId: user.id,
+      email: user.email,
+      superadmin: user.superadmin,
+    };
+  }
+
+  async getSuperadminStatus(userId: number) {
+    // Try to find user in Admin repository
+    let user: any = await this.adminRepository.findOne({ where: { id: userId } });
+
+    // If not found in Admin, try Professional
+    if (!user) {
+      user = await this.professionalRepository.findOne({ where: { id: userId } });
+    }
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      superadmin: user.superadmin || false,
     };
   }
 }

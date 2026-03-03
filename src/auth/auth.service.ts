@@ -112,9 +112,13 @@ export class AuthService {
     }
 
     async registerAdmin(registerAdminDto: RegisterAdminDto) {
-        const { email, password } = registerAdminDto;
+        const { email, password, name } = registerAdminDto;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const admin = this.adminRepository.create({ email, password: hashedPassword });
+        const admin = this.adminRepository.create({
+            email,
+            password: hashedPassword,
+            name,
+        });
         return this.adminRepository.save(admin);
     }
 
@@ -166,14 +170,17 @@ export class AuthService {
                 sub: admin.id,
                 role: 'admin',
                 name: admin.name,
-                status: 'ACCEPTED' // Admins are always validated 
+                status: 'ACCEPTED', // Admins are always validated 
+                superadmin: admin.superadmin,
             };
             return {
                 access_token: this.jwtService.sign(payload),
+                id: admin.id,
                 role: 'admin',
                 name: admin.name,
                 status: 'ACCEPTED',
-                ban: admin.ban
+                ban: admin.ban,
+                superadmin: admin.superadmin
             };
         }
 
@@ -194,6 +201,7 @@ export class AuthService {
             };
             return {
                 access_token: this.jwtService.sign(payload),
+                id: pro.id,
                 role: 'professional',
                 name: pro.name,
                 status: pro.status,
