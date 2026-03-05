@@ -19,7 +19,13 @@ import { Resend } from 'resend';
     {
       provide: 'RESEND_CLIENT',
       useFactory: (configService: ConfigService) => {
-        return new Resend(configService.get('RESEND_API_KEY'));
+        const apiKey = configService.get('RESEND_API_KEY');
+        if (!apiKey) {
+          console.warn('[NotificationModule] RESEND_API_KEY is missing. Emails will not send.');
+          // Provide a dummy key to prevent the SDK from crashing on startup
+          return new Resend('missing_key');
+        }
+        return new Resend(apiKey);
       },
       inject: [ConfigService],
     },

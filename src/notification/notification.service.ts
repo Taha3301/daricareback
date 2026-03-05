@@ -58,9 +58,14 @@ export class NotificationService {
   async sendResetPasswordEmail(email: string, token: string) {
     const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
-    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
 
-    await this.resend.emails.send({
+    // Use onboarding@resend.dev for trial accounts if no verified domain is configured
+    let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
+    if (fromEmail.includes('example.com')) {
+      fromEmail = 'onboarding@resend.dev';
+    }
+
+    const { data, error } = await this.resend.emails.send({
       from: `DariCare <${fromEmail}>`,
       to: email,
       subject: 'Password Reset Request',
@@ -71,6 +76,12 @@ export class NotificationService {
         <p>If you did not request this, please ignore this email.</p>
       `,
     });
+
+    if (error) {
+      console.error(`[NotificationService] Resend error (ResetPassword):`, error);
+    } else {
+      console.log(`[NotificationService] Resend success (ResetPassword). ID: ${data?.id}`);
+    }
   }
 
   async sendAcceptanceEmail(
@@ -86,7 +97,12 @@ export class NotificationService {
     totalPrice: number,
   ) {
     console.log(`[NotificationService] sendAcceptanceEmail initiated for: ${patientEmail}`);
-    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
+
+    // Use onboarding@resend.dev for trial accounts if no verified domain is configured
+    let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
+    if (fromEmail.includes('example.com')) {
+      fromEmail = 'onboarding@resend.dev';
+    }
 
     const hours = Math.floor(estimatedTimeMinutes / 60);
     const minutes = Math.round(estimatedTimeMinutes % 60);
@@ -100,7 +116,7 @@ export class NotificationService {
       estimatedTimeText = `${minutes} minute${minutes > 1 ? 's' : ''}`;
     }
 
-    await this.resend.emails.send({
+    const { data, error } = await this.resend.emails.send({
       from: `DariCare <${fromEmail}>`,
       to: patientEmail,
       subject: 'Votre demande de soin a été acceptée - DariCare',
@@ -160,6 +176,12 @@ export class NotificationService {
         </div>
       `,
     });
+
+    if (error) {
+      console.error(`[NotificationService] Resend error (Acceptance):`, error);
+    } else {
+      console.log(`[NotificationService] Resend success (Acceptance). ID: ${data?.id}`);
+    }
   }
 
   async sendRejectionEmail(
@@ -168,8 +190,13 @@ export class NotificationService {
     serviceName: string,
     address: string,
   ) {
-    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
-    await this.resend.emails.send({
+    // Use onboarding@resend.dev for trial accounts if no verified domain is configured
+    let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
+    if (fromEmail.includes('example.com')) {
+      fromEmail = 'onboarding@resend.dev';
+    }
+
+    const { data, error } = await this.resend.emails.send({
       from: `DariCare <${fromEmail}>`,
       to: patientEmail,
       subject: 'Mise à jour concernant votre demande de soin - DariCare',
@@ -204,5 +231,11 @@ export class NotificationService {
         </div>
       `,
     });
+
+    if (error) {
+      console.error(`[NotificationService] Resend error (Rejection):`, error);
+    } else {
+      console.log(`[NotificationService] Resend success (Rejection). ID: ${data?.id}`);
+    }
   }
 }
