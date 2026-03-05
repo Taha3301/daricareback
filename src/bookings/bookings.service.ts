@@ -253,6 +253,7 @@ export class BookingsService {
     }
 
     async acceptBooking(requestId: number, professionalId: number): Promise<{ requestId: number, professionalId: number }> {
+        console.log(`[BookingsService] acceptBooking started for requestId: ${requestId}, professionalId: ${professionalId}`);
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -314,9 +315,12 @@ export class BookingsService {
             }
 
             await queryRunner.commitTransaction();
+            console.log(`[BookingsService] Transaction committed for request ${requestId}`);
 
             // 7. Send acceptance email to patient if email is provided (Asynchronous - non-blocking)
+            console.log(`[BookingsService] Checking patient email: "${request.patientEmail}"`);
             if (request.patientEmail) {
+                console.log(`[BookingsService] Preparing acknowledgement for ${request.patientEmail}`);
                 const estimatedTime = this.calculateEstimatedTime(assignment?.distance);
                 const patientName = `${request.patientFirstname} ${request.patientLastname}`;
                 const serviceName = request.service?.name || 'Service';
@@ -339,9 +343,12 @@ export class BookingsService {
                     availabilityWindow,
                     estimatedTime,
                     request.totalPrice
-                ).catch(emailError => {
-                    console.error('Failed to send acceptance email (async):', emailError);
+                ).then(() => {
+                    console.log(`[BookingsService] Async acceptance email sent successfully to ${request.patientEmail}`);
+                }).catch(emailError => {
+                    console.error('[BookingsService] Failed to send acceptance email (async):', emailError);
                 });
+                console.log(`[BookingsService] Async acceptance email call triggered for ${request.patientEmail}`);
             }
 
             return { requestId, professionalId };
@@ -401,6 +408,7 @@ export class BookingsService {
     }
 
     async denyBooking(requestId: number, professionalId: number): Promise<{ requestId: number, professionalId: number }> {
+        console.log(`[BookingsService] denyBooking started for requestId: ${requestId}, professionalId: ${professionalId}`);
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -447,16 +455,20 @@ export class BookingsService {
             }
 
             await queryRunner.commitTransaction();
+            console.log(`[BookingsService] Transaction committed for deny request ${requestId}. sendRejectionEmail: ${sendRejectionEmail}`);
 
             // 4. Send rejection email to patient (Asynchronous - non-blocking)
             if (sendRejectionEmail && patientEmail) {
+                console.log(`[BookingsService] Triggering async rejection email for ${patientEmail}`);
                 this.notificationService.sendRejectionEmail(
                     patientEmail,
                     patientName,
                     serviceName,
                     address
-                ).catch(emailError => {
-                    console.error('Failed to send rejection email (async):', emailError);
+                ).then(() => {
+                    console.log(`[BookingsService] Async rejection email sent successfully to ${patientEmail}`);
+                }).catch(emailError => {
+                    console.error('[BookingsService] Failed to send rejection email (async):', emailError);
                 });
             }
 

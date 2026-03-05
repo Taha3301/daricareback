@@ -82,6 +82,7 @@ export class NotificationService {
     estimatedTimeMinutes: number,
     totalPrice: number,
   ) {
+    console.log(`[NotificationService] sendAcceptanceEmail initiated for: ${patientEmail}`);
     const hours = Math.floor(estimatedTimeMinutes / 60);
     const minutes = Math.round(estimatedTimeMinutes % 60);
 
