@@ -9,8 +9,6 @@ export class Service {
     @Column()
     name: string;
 
-    @Column({ nullable: true })
-    name_fr: string;
 
     @Column({ nullable: true })
     name_ar: string;
@@ -18,8 +16,6 @@ export class Service {
     @Column()
     description: string;
 
-    @Column({ nullable: true })
-    description_fr: string;
 
     @Column({ nullable: true })
     description_ar: string;

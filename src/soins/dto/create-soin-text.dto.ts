@@ -7,10 +7,6 @@ export class CreateSoinTextDto {
     @IsString()
     name: string;
 
-    @ApiProperty({ description: 'The question name in French', required: false })
-    @IsOptional()
-    @IsString()
-    name_fr?: string;
 
     @ApiProperty({ description: 'The question name in Arabic', required: false })
     @IsOptional()

@@ -7,10 +7,6 @@ export class CreateSoinDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ description: 'The name of the soin in French', required: false })
-  @IsOptional()
-  @IsString()
-  name_fr?: string;
 
   @ApiProperty({ description: 'The name of the soin in Arabic', required: false })
   @IsOptional()
@@ -22,10 +18,6 @@ export class CreateSoinDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ description: 'The description of the soin in French', required: false })
-  @IsOptional()
-  @IsString()
-  description_fr?: string;
 
   @ApiProperty({ description: 'The description of the soin in Arabic', required: false })
   @IsOptional()

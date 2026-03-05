@@ -13,8 +13,6 @@ export class Soin {
     @Column()
     name: string;
 
-    @Column({ nullable: true })
-    name_fr: string;
 
     @Column({ nullable: true })
     name_ar: string;
@@ -22,8 +20,6 @@ export class Soin {
     @Column()
     description: string;
 
-    @Column({ nullable: true })
-    description_fr: string;
 
     @Column({ nullable: true })
     description_ar: string;

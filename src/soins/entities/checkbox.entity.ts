@@ -9,8 +9,6 @@ export class SoinCheckbox {
     @Column()
     name: string;
 
-    @Column({ nullable: true })
-    name_fr: string;
 
     @Column({ nullable: true })
     name_ar: string;

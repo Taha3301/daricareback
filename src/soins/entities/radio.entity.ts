@@ -9,8 +9,8 @@ export class SoinRadio {
     @Column()
     name: string;
 
-    @Column({ nullable: true })
-    name_fr: string;
+    @Column()
+    name: string;
 
     @Column({ nullable: true })
     name_ar: string;
