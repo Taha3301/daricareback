@@ -9,13 +9,11 @@ export class Service {
     @Column()
     name: string;
 
-
     @Column({ nullable: true })
     name_ar: string;
 
     @Column()
     description: string;
-
 
     @Column({ nullable: true })
     description_ar: string;

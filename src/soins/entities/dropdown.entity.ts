@@ -9,9 +9,6 @@ export class SoinDropdown {
     @Column()
     name: string;
 
-    @Column()
-    name: string;
-
     @Column({ nullable: true })
     name_ar: string;
 
