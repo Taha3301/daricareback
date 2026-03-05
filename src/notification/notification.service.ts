@@ -56,8 +56,8 @@ export class NotificationService {
   }
 
   async sendResetPasswordEmail(email: string, token: string) {
-    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
-    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+    const frontendUrl = (this.configService.get('FRONTEND_URL') || 'http://localhost:5173').replace(/\/$/, '');
+    const resetLink = `${frontendUrl}/daricarefront/reset-password?token=${token}`;
 
     // Use onboarding@resend.dev for trial accounts if no verified domain is configured
     let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
