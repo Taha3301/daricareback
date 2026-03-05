@@ -9,8 +9,20 @@ export class Service {
     @Column()
     name: string;
 
+    @Column({ nullable: true })
+    name_fr: string;
+
+    @Column({ nullable: true })
+    name_ar: string;
+
     @Column()
     description: string;
+
+    @Column({ nullable: true })
+    description_fr: string;
+
+    @Column({ nullable: true })
+    description_ar: string;
 
     @Column({ nullable: true })
     image: string;

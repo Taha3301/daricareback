@@ -64,7 +64,11 @@ export class ServicesService {
 
   async findByName(name: string) {
     const service = await this.serviceRepository.findOne({
-      where: { name },
+      where: [
+        { name },
+        { name_fr: name },
+        { name_ar: name }
+      ],
       relations: [
         'soins',
         'soins.checkboxes',
@@ -89,7 +93,11 @@ export class ServicesService {
     }
 
     const service = await this.serviceRepository.findOne({
-      where: { name: professional.speciality },
+      where: [
+        { name: professional.speciality },
+        { name_fr: professional.speciality },
+        { name_ar: professional.speciality }
+      ],
       relations: [
         'soins',
         'soins.checkboxes',

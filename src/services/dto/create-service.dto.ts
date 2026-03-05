@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateServiceDto {
@@ -7,10 +7,30 @@ export class CreateServiceDto {
     @IsString()
     name: string;
 
+    @ApiProperty({ description: 'The name of the service in French', required: false })
+    @IsOptional()
+    @IsString()
+    name_fr?: string;
+
+    @ApiProperty({ description: 'The name of the service in Arabic', required: false })
+    @IsOptional()
+    @IsString()
+    name_ar?: string;
+
     @ApiProperty({ description: 'The description of the service' })
     @IsNotEmpty()
     @IsString()
     description: string;
+
+    @ApiProperty({ description: 'The description of the service in French', required: false })
+    @IsOptional()
+    @IsString()
+    description_fr?: string;
+
+    @ApiProperty({ description: 'The description of the service in Arabic', required: false })
+    @IsOptional()
+    @IsString()
+    description_ar?: string;
 
     @ApiProperty({ description: 'The image of the service', required: false, type: 'string', format: 'binary' })
     image?: any;

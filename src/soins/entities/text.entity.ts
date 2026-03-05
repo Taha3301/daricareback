@@ -9,6 +9,12 @@ export class SoinText {
     @Column()
     name: string;
 
+    @Column({ nullable: true })
+    name_fr: string;
+
+    @Column({ nullable: true })
+    name_ar: string;
+
     @ManyToOne(() => Soin, (soin) => soin.texts, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'soinId' })
     soin: Soin;

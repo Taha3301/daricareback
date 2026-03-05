@@ -9,6 +9,12 @@ export class SoinRadio {
     @Column()
     name: string;
 
+    @Column({ nullable: true })
+    name_fr: string;
+
+    @Column({ nullable: true })
+    name_ar: string;
+
     @Column('simple-array')
     choices: string[];
 

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsArray, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSoinRadioDto {
@@ -6,6 +6,16 @@ export class CreateSoinRadioDto {
     @IsNotEmpty()
     @IsString()
     name: string;
+
+    @ApiProperty({ description: 'The question name in French', required: false })
+    @IsOptional()
+    @IsString()
+    name_fr?: string;
+
+    @ApiProperty({ description: 'The question name in Arabic', required: false })
+    @IsOptional()
+    @IsString()
+    name_ar?: string;
 
     @ApiProperty({ description: 'The choices for selection', type: [String] })
     @IsArray()
