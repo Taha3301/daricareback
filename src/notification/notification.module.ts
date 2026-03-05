@@ -18,6 +18,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           port: configService.get('SMTP_PORT'),
           secure: configService.get('SMTP_SECURE') === 'true',
           family: 4,
+          connectionTimeout: 20000,
+          greetingTimeout: 20000,
+          socketTimeout: 30000,
           auth: {
             user: configService.get('SMTP_USER'),
             pass: configService.get('SMTP_PASS'),
