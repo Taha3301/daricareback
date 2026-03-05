@@ -10,13 +10,13 @@ export class Soin {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ nullable: true })
     name: string;
 
     @Column({ nullable: true })
     name_ar: string;
 
-    @Column()
+    @Column({ nullable: true })
     description: string;
 
     @Column({ nullable: true })
