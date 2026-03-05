@@ -313,39 +313,37 @@ export class BookingsService {
                 console.error('Failed to update notification:', notifError);
             }
 
-            // 7. Send acceptance email to patient if email is provided
-            if (request.patientEmail) {
-                try {
-                    const estimatedTime = this.calculateEstimatedTime(assignment?.distance);
-                    const patientName = `${request.patientFirstname} ${request.patientLastname}`;
-                    const serviceName = request.service?.name || 'Service';
-                    const availabilityWindow = `${request.availabilityStart} - ${request.availabilityEnd}`;
-                    const startDate = new Date(request.startDate).toLocaleDateString('fr-FR', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
+            await queryRunner.commitTransaction();
 
-                    await this.notificationService.sendAcceptanceEmail(
-                        request.patientEmail,
-                        patientName,
-                        professional.name,
-                        professional.speciality,
-                        request.address,
-                        serviceName,
-                        startDate,
-                        availabilityWindow,
-                        estimatedTime,
-                        request.totalPrice
-                    );
-                } catch (emailError) {
-                    // Log error but don't fail the acceptance
-                    console.error('Failed to send acceptance email:', emailError);
-                }
+            // 7. Send acceptance email to patient if email is provided (Asynchronous - non-blocking)
+            if (request.patientEmail) {
+                const estimatedTime = this.calculateEstimatedTime(assignment?.distance);
+                const patientName = `${request.patientFirstname} ${request.patientLastname}`;
+                const serviceName = request.service?.name || 'Service';
+                const availabilityWindow = `${request.availabilityStart} - ${request.availabilityEnd}`;
+                const startDate = new Date(request.startDate).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                this.notificationService.sendAcceptanceEmail(
+                    request.patientEmail,
+                    patientName,
+                    professional.name,
+                    professional.speciality,
+                    request.address,
+                    serviceName,
+                    startDate,
+                    availabilityWindow,
+                    estimatedTime,
+                    request.totalPrice
+                ).catch(emailError => {
+                    console.error('Failed to send acceptance email (async):', emailError);
+                });
             }
 
-            await queryRunner.commitTransaction();
             return { requestId, professionalId };
         } catch (err) {
             await queryRunner.rollbackTransaction();
@@ -407,6 +405,9 @@ export class BookingsService {
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
+        let sendRejectionEmail = false;
+        let patientEmail, patientName, serviceName, address;
+
         try {
             // 1. Update the professional's assignment status
             const assignment = await queryRunner.manager.findOne(MedicalRequestProfessional, {
@@ -436,25 +437,29 @@ export class BookingsService {
                     request.status = RequestStatus.REJECTED;
                     await queryRunner.manager.save(request);
 
-                    // 4. Send rejection email to patient
-                    if (request.patientEmail) {
-                        try {
-                            const patientName = `${request.patientFirstname} ${request.patientLastname}`;
-                            const serviceName = request.service?.name || 'Service';
-                            await this.notificationService.sendRejectionEmail(
-                                request.patientEmail,
-                                patientName,
-                                serviceName,
-                                request.address
-                            );
-                        } catch (emailError) {
-                            console.error('Failed to send rejection email:', emailError);
-                        }
-                    }
+                    // Capture info for async email sending after commit
+                    sendRejectionEmail = true;
+                    patientEmail = request.patientEmail;
+                    patientName = `${request.patientFirstname} ${request.patientLastname}`;
+                    serviceName = request.service?.name || 'Service';
+                    address = request.address;
                 }
             }
 
             await queryRunner.commitTransaction();
+
+            // 4. Send rejection email to patient (Asynchronous - non-blocking)
+            if (sendRejectionEmail && patientEmail) {
+                this.notificationService.sendRejectionEmail(
+                    patientEmail,
+                    patientName,
+                    serviceName,
+                    address
+                ).catch(emailError => {
+                    console.error('Failed to send rejection email (async):', emailError);
+                });
+            }
+
             return { requestId, professionalId };
         } catch (err) {
             await queryRunner.rollbackTransaction();
