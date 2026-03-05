@@ -15,12 +15,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: async (configService: ConfigService) => ({
         transport: {
           host: configService.get('SMTP_HOST'),
-          port: configService.get('SMTP_PORT'),
+          port: parseInt(configService.get('SMTP_PORT')),
           secure: configService.get('SMTP_SECURE') === 'true',
+          pool: true,
           family: 4,
           connectionTimeout: 20000,
           greetingTimeout: 20000,
           socketTimeout: 30000,
+          tls: {
+            rejectUnauthorized: false
+          },
           auth: {
             user: configService.get('SMTP_USER'),
             pass: configService.get('SMTP_PASS'),
