@@ -6,6 +6,7 @@ import { Notification } from './notification.entity';
 import { NotificationGateway } from './notification.gateway';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as dns from 'node:dns';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           secure: configService.get('SMTP_SECURE') === 'true',
           pool: true,
           family: 4,
+          lookup: (hostname, options, callback) => dns.lookup(hostname, { family: 4 }, callback),
           connectionTimeout: 20000,
           greetingTimeout: 20000,
           socketTimeout: 30000,
