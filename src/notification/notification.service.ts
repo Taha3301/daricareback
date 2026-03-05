@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './notification.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { NotificationGateway } from './notification.gateway';
-import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class NotificationService {
@@ -14,7 +14,8 @@ export class NotificationService {
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly notificationGateway: NotificationGateway,
-    private readonly mailerService: MailerService,
+    @Inject('RESEND_CLIENT')
+    private readonly resend: Resend,
     private readonly configService: ConfigService,
   ) { }
 
@@ -57,8 +58,10 @@ export class NotificationService {
   async sendResetPasswordEmail(email: string, token: string) {
     const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
 
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: `DariCare <${fromEmail}>`,
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -83,6 +86,8 @@ export class NotificationService {
     totalPrice: number,
   ) {
     console.log(`[NotificationService] sendAcceptanceEmail initiated for: ${patientEmail}`);
+    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
+
     const hours = Math.floor(estimatedTimeMinutes / 60);
     const minutes = Math.round(estimatedTimeMinutes % 60);
 
@@ -95,7 +100,8 @@ export class NotificationService {
       estimatedTimeText = `${minutes} minute${minutes > 1 ? 's' : ''}`;
     }
 
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: `DariCare <${fromEmail}>`,
       to: patientEmail,
       subject: 'Votre demande de soin a été acceptée - DariCare',
       html: `
@@ -162,7 +168,9 @@ export class NotificationService {
     serviceName: string,
     address: string,
   ) {
-    await this.mailerService.sendMail({
+    const fromEmail = this.configService.get('SMTP_FROM') || 'no-reply@example.com';
+    await this.resend.emails.send({
+      from: `DariCare <${fromEmail}>`,
       to: patientEmail,
       subject: 'Mise à jour concernant votre demande de soin - DariCare',
       html: `
