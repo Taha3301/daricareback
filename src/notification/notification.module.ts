@@ -18,12 +18,20 @@ import * as dns from 'node:dns';
           host: configService.get('SMTP_HOST'),
           port: parseInt(configService.get('SMTP_PORT')),
           secure: configService.get('SMTP_SECURE') === 'true',
-          pool: true,
+          pool: false, // Disable pooling for debugging
           family: 4,
-          lookup: (hostname, options, callback) => dns.lookup(hostname, { family: 4 }, callback),
-          connectionTimeout: 20000,
-          greetingTimeout: 20000,
-          socketTimeout: 30000,
+          lookup: (hostname, options, callback) => {
+            console.log(`[SMTP Debug] Resolving ${hostname}...`);
+            return dns.lookup(hostname, { family: 4 }, (err, address, family) => {
+              console.log(`[SMTP Debug] Resolved ${hostname} to ${address} (family: ${family})`);
+              callback(err, address, family);
+            });
+          },
+          logger: true, // Enable nodemailer internal logging
+          debug: true,  // Show SMTP traffic in logs
+          connectionTimeout: 60000, // Increase to 60s
+          greetingTimeout: 30000,
+          socketTimeout: 60000,
           tls: {
             rejectUnauthorized: false
           },
