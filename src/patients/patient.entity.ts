@@ -25,11 +25,11 @@ export class Patient {
     birthdate: Date;
 
     @ApiProperty()
-    @Column({ unique: true })
+    @Column()
     phone: string;
 
     @ApiProperty()
-    @Column({ unique: true, nullable: true })
+    @Column({ nullable: true })
     email: string;
 
     @ApiProperty()
