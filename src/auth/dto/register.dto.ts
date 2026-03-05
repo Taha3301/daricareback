@@ -1,8 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsOptional } from 'class-validator';
+import { Gender } from '../../user/user.entity';
 
 export class RegisterDto {
     @ApiProperty({ example: 'admin@test.com' })
     email: string;
+
+    @ApiProperty({ enum: Gender, example: Gender.MALE, required: false })
+    @IsOptional()
+    @IsEnum(Gender)
+    gender?: Gender;
 
     @ApiProperty({ example: 'password123' })
     password: string;

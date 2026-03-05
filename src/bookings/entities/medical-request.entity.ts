@@ -21,11 +21,20 @@ export enum PrescriptionStatus {
     PENDING = 'pending',
 }
 
+export enum Gender {
+    MALE = 'male',
+    FEMALE = 'female'
+}
+
 @Entity('medical_requests')
 export class MedicalRequest {
     @ApiProperty()
     @PrimaryGeneratedColumn()
     id: number;
+
+    @ApiProperty({ enum: Gender, required: false })
+    @Column({ type: 'enum', enum: Gender, nullable: true })
+    gender: Gender;
 
     @ManyToOne(() => Service)
     @JoinColumn({ name: 'service_id' })

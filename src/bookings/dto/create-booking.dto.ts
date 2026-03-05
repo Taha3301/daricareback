@@ -1,7 +1,7 @@
 import { IsEnum, IsString, IsNotEmpty, IsDateString, IsEmail, IsBoolean, IsNumber, IsOptional, ValidateNested, IsArray } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PatientCivility, PrescriptionStatus } from '../entities/medical-request.entity';
+import { PatientCivility, PrescriptionStatus, Gender } from '../entities/medical-request.entity';
 import { VisitType } from '../entities/request-soin.entity';
 
 export class RequestSoinDto {
@@ -38,6 +38,11 @@ export class CreateBookingDto {
     @IsNotEmpty()
     @Type(() => Number)
     serviceId: number;
+
+    @ApiProperty({ enum: Gender, example: Gender.MALE, required: false })
+    @IsEnum(Gender)
+    @IsOptional()
+    gender?: Gender;
 
     @ApiProperty({ enum: PatientCivility, example: PatientCivility.M })
     @IsEnum(PatientCivility)
