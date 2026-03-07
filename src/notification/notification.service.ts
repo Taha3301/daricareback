@@ -16,8 +16,31 @@ export class NotificationService {
     private readonly notificationGateway: NotificationGateway,
     @Inject('RESEND_CLIENT')
     private readonly resend: Resend,
+    @Inject('TWILIO_CLIENT')
+    private readonly twilioClient: any,
     private readonly configService: ConfigService,
   ) { }
+
+  async sendWhatsApp(to: string, message: string) {
+    const from = this.configService.get('TWILIO_WHATSAPP_FROM');
+    if (!this.twilioClient || !from) {
+      console.warn('[NotificationService] Twilio client or from number missing. WhatsApp not sent.');
+      return;
+    }
+
+    try {
+      const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`;
+      const response = await this.twilioClient.messages.create({
+        body: message,
+        from: from,
+        to: formattedTo,
+      });
+      console.log(`[NotificationService] WhatsApp sent successfully. SID: ${response.sid}`);
+      return response;
+    } catch (error) {
+      console.error('[NotificationService] Failed to send WhatsApp:', error);
+    }
+  }
 
   async create(createNotificationDto: CreateNotificationDto, extraData?: any) {
     const notification = this.notificationRepository.create(createNotificationDto);
@@ -88,6 +111,7 @@ export class NotificationService {
     patientEmail: string,
     patientName: string,
     professionalName: string,
+    professionalPhone: string,
     professionalSpeciality: string,
     address: string,
     serviceName: string,
@@ -134,6 +158,7 @@ export class NotificationService {
             <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #2e7d32; margin-top: 0;">Détails du professionnel</h3>
               <p style="color: #34495e; margin: 5px 0;"><strong>Nom :</strong> ${professionalName}</p>
+              <p style="color: #34495e; margin: 5px 0;"><strong>Téléphone :</strong> ${professionalPhone}</p>
               <p style="color: #34495e; margin: 5px 0;"><strong>Spécialité :</strong> ${professionalSpeciality}</p>
             </div>
             

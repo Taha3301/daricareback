@@ -15,6 +15,9 @@ export class SoinDropdown {
     @Column('simple-array')
     choices: string[];
 
+    @Column('simple-array', { nullable: true })
+    choices_ar: string[];
+
     @ManyToOne(() => Soin, (soin) => soin.dropdowns, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'soinId' })
     soin: Soin;

@@ -15,6 +15,9 @@ export class SoinCheckbox {
 
     @Column('simple-array')
     choices: string[];
+    
+    @Column('simple-array', { nullable: true })
+    choices_ar: string[];
 
     @ManyToOne(() => Soin, (soin) => soin.checkboxes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'soinId' })

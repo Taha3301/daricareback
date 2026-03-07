@@ -142,6 +142,13 @@ export class BookingsService {
                     distance: distance
                 });
                 await queryRunner.manager.save(assignment);
+
+                // Send WhatsApp notification if professional has it enabled
+                if (prof.whatsapp) {
+                    const whatsappMessage = `Nouvelle demande DariCare !\nService: ${serviceName}\nPatient: ${savedRequest.patientFirstname} ${savedRequest.patientLastname}\nAdresse: ${savedRequest.address}\n\nConnectez-vous pour répondre.`;
+                    this.notificationService.sendWhatsApp(prof.phone || prof.professionalPhone, whatsappMessage)
+                        .catch(err => console.error(`Failed to send WhatsApp to prof ${prof.id}:`, err));
+                }
             }
 
             await queryRunner.commitTransaction();
@@ -336,6 +343,7 @@ export class BookingsService {
                     request.patientEmail,
                     patientName,
                     professional.name,
+                    professional.phone,
                     professional.speciality,
                     request.address,
                     serviceName,

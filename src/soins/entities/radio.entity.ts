@@ -15,6 +15,9 @@ export class SoinRadio {
     @Column('simple-array')
     choices: string[];
 
+    @Column('simple-array', { nullable: true })
+    choices_ar: string[];
+
     @ManyToOne(() => Soin, (soin) => soin.radios, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'soinId' })
     soin: Soin;
