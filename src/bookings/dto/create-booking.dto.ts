@@ -133,6 +133,11 @@ export class CreateBookingDto {
     @IsOptional()
     prescriptionStatus: PrescriptionStatus;
 
+    @ApiPropertyOptional({ example: 'Fauteuil roulant, béquilles' })
+    @IsString()
+    @IsOptional()
+    materiel?: string;
+
     @ApiProperty({ type: [RequestSoinDto] })
     @IsArray()
     @ValidateNested({ each: true })

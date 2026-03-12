@@ -88,6 +88,11 @@ export class NotificationService {
       fromEmail = 'onboarding@resend.dev';
     }
 
+    if (!this.resend) {
+      console.warn('[NotificationService] Resend client missing. Reset password email not sent.');
+      return;
+    }
+
     const { data, error } = await this.resend.emails.send({
       from: `DariCare <${fromEmail}>`,
       to: email,
@@ -107,6 +112,88 @@ export class NotificationService {
     }
   }
 
+  async sendBookingConfirmationEmail(
+    patientEmail: string,
+    patientName: string,
+    serviceName: string,
+    address: string,
+    startDate: string,
+    availabilityWindow: string,
+    totalPrice: number,
+    soins: string[] = [],
+  ) {
+    console.log(`[NotificationService] sendBookingConfirmationEmail initiated for: ${patientEmail}`);
+
+    let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
+    if (fromEmail.includes('example.com')) {
+      fromEmail = 'onboarding@resend.dev';
+    }
+
+    if (!this.resend) {
+      console.warn('[NotificationService] Resend client missing. Booking confirmation email not sent.');
+      return;
+    }
+
+    const { data, error } = await this.resend.emails.send({
+      from: `DariCare <${fromEmail}>`,
+      to: patientEmail,
+      subject: 'Confirmation de votre demande de soin - DariCare',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #2c3e50; margin-top: 0;">Votre demande a été bien enregistrée</h2>
+            
+            <p style="color: #34495e; font-size: 16px;">Bonjour <strong>${patientName}</strong>,</p>
+            
+            <p style="color: #34495e; font-size: 16px;">
+              Nous avons bien reçu votre demande de soin. Notre équipe et nos professionnels de santé vont l'examiner prochainement.
+            </p>
+            
+            <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1565c0; margin-top: 0;">Détails de votre demande</h3>
+              <p style="color: #34495e; margin: 5px 0;"><strong>Service :</strong> ${serviceName}</p>
+              ${soins.length > 0 ? `<p style="color: #34495e; margin: 5px 0;"><strong>Soins :</strong> ${soins.join(', ')}</p>` : ''}
+              <p style="color: #34495e; margin: 5px 0;"><strong>Adresse :</strong> ${address}</p>
+              <p style="color: #34495e; margin: 5px 0;"><strong>Date :</strong> ${startDate}</p>
+              <p style="color: #34495e; margin: 5px 0;"><strong>Disponibilité :</strong> ${availabilityWindow}</p>
+            </div>
+
+            <div style="background-color: #f3e5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #7b1fa2; margin-top: 0;">Récapitulatif financier</h3>
+              <p style="color: #34495e; font-size: 18px; margin: 5px 0;">
+                <strong>Montant estimé :</strong> ${totalPrice} DT
+              </p>
+            </div>
+
+            <div style="background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #ef6c00; margin-top: 0;">⏱️ Prochaine étape</h3>
+              <p style="color: #34495e; font-size: 16px; margin: 5px 0;">
+                Dès qu'un professionnel acceptera votre demande, vous recevrez un nouvel email avec ses coordonnées et son <strong>temps estimé d'arrivée</strong>.
+              </p>
+            </div>
+            
+            <p style="color: #34495e; font-size: 16px;">
+              Vous pouvez suivre l'état de votre demande depuis votre espace patient.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+            
+            <p style="color: #757575; font-size: 14px; text-align: center;">
+              Merci de votre confiance,<br>
+              <strong>L'équipe DariCare</strong>
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error(`[NotificationService] Resend error (Confirmation):`, error);
+    } else {
+      console.log(`[NotificationService] Resend success (Confirmation). ID: ${data?.id}`);
+    }
+  }
+
   async sendAcceptanceEmail(
     patientEmail: string,
     patientName: string,
@@ -119,6 +206,7 @@ export class NotificationService {
     availabilityWindow: string,
     estimatedTimeMinutes: number,
     totalPrice: number,
+    soins: string[] = [],
   ) {
     console.log(`[NotificationService] sendAcceptanceEmail initiated for: ${patientEmail}`);
 
@@ -138,6 +226,11 @@ export class NotificationService {
       estimatedTimeText = `${hours} heure${hours > 1 ? 's' : ''}`;
     } else {
       estimatedTimeText = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+
+    if (!this.resend) {
+      console.warn('[NotificationService] Resend client missing. Acceptance email not sent.');
+      return;
     }
 
     const { data, error } = await this.resend.emails.send({
@@ -165,6 +258,7 @@ export class NotificationService {
             <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #1565c0; margin-top: 0;">Détails de votre demande</h3>
               <p style="color: #34495e; margin: 5px 0;"><strong>Service :</strong> ${serviceName}</p>
+              ${soins.length > 0 ? `<p style="color: #34495e; margin: 5px 0;"><strong>Soins :</strong> ${soins.join(', ')}</p>` : ''}
               <p style="color: #34495e; margin: 5px 0;"><strong>Adresse :</strong> ${address}</p>
               <p style="color: #34495e; margin: 5px 0;"><strong>Date :</strong> ${startDate}</p>
               <p style="color: #34495e; margin: 5px 0;"><strong>Disponibilité :</strong> ${availabilityWindow}</p>
@@ -219,6 +313,11 @@ export class NotificationService {
     let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
     if (fromEmail.includes('example.com')) {
       fromEmail = 'onboarding@resend.dev';
+    }
+
+    if (!this.resend) {
+      console.warn('[NotificationService] Resend client missing. Rejection email not sent.');
+      return;
     }
 
     const { data, error } = await this.resend.emails.send({

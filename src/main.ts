@@ -4,7 +4,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  console.log('[Bootstrap] Starting bootstrap...');
   const app = await NestFactory.create(AppModule);
+  console.log('[Bootstrap] AppModule created.');
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.enableCors({

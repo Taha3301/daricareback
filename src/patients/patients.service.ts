@@ -24,7 +24,22 @@ export class PatientsService {
     ) { }
 
     async syncPatient(data: SyncPatientDto): Promise<Patient> {
-        // Create new patient for every request to ensure independent data
+        // Check if patient already exists by phone or email
+        const existingPatient = await this.patientRepository.findOne({
+            where: [
+                { phone: data.phone },
+                ...(data.email ? [{ email: data.email }] : [])
+            ]
+        });
+
+        if (existingPatient) {
+            // Update existing patient with the latest information
+            // Note: We don't overwrite ID or createdAt
+            Object.assign(existingPatient, data);
+            return await this.patientRepository.save(existingPatient);
+        }
+
+        // Create new patient if none found
         const newPatient = this.patientRepository.create(data);
         return await this.patientRepository.save(newPatient);
     }

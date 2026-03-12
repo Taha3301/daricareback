@@ -5,6 +5,7 @@ import { MedicalRequest, RequestStatus } from './entities/medical-request.entity
 import { RequestSoin } from './entities/request-soin.entity';
 import { RequestDocument } from './entities/request-document.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 import { Professional } from '../professional/entities/professional.entity';
 import { NotificationService } from '../notification/notification.service';
 import { MedicalRequestProfessional, AssignmentStatus } from './entities/medical-request-professional.entity';
@@ -339,6 +340,18 @@ export class BookingsService {
                     day: 'numeric'
                 });
 
+                // Fetch soins names for this request
+                let soinNames = [];
+                try {
+                    const requestSoins = await queryRunner.manager.find(RequestSoin, {
+                        where: { requestId: request.id },
+                        relations: ['soin']
+                    });
+                    soinNames = requestSoins.map(rs => rs.soin?.name).filter(Boolean);
+                } catch (soinFetchError) {
+                    console.error('[BookingsService] Failed to fetch soins for acceptance email:', soinFetchError);
+                }
+
                 this.notificationService.sendAcceptanceEmail(
                     request.patientEmail,
                     patientName,
@@ -350,7 +363,8 @@ export class BookingsService {
                     startDate,
                     availabilityWindow,
                     estimatedTime,
-                    request.totalPrice
+                    request.totalPrice,
+                    soinNames
                 ).then(() => {
                     console.log(`[BookingsService] Async acceptance email sent successfully to ${request.patientEmail}`);
                 }).catch(emailError => {
@@ -610,6 +624,20 @@ export class BookingsService {
         }
 
         return results;
+    }
+
+    async updateBooking(id: number, updateBookingDto: UpdateBookingDto): Promise<MedicalRequest> {
+        const request = await this.medicalRequestRepository.findOne({ where: { id } });
+        if (!request) {
+            throw new NotFoundException(`Medical request with ID ${id} not found`);
+        }
+
+        // We don't handle complex updates (like soins or files) in this simple PATCH for now,
+        // as the user mainly asked for the 'materiel' column and general CRUD update.
+        // If they need to update soins, that would require more complex logic.
+        
+        Object.assign(request, updateBookingDto);
+        return this.medicalRequestRepository.save(request);
     }
 
     private timeToMinutes(time: string): number {

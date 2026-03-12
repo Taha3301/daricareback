@@ -2,6 +2,7 @@ import {
     Controller,
     Post,
     Get,
+    Patch,
     Param,
     Body,
     UseInterceptors,
@@ -17,6 +18,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 import { MedicalRequest } from './entities/medical-request.entity';
 import { MedicalRequestProfessional } from './entities/medical-request-professional.entity';
 import { Notification } from '../notification/notification.entity';
@@ -165,5 +167,16 @@ export class BookingsController {
     @ApiResponse({ status: 200, description: 'Return professional assignments.', type: [MedicalRequestProfessional] })
     async getAssignmentsByProfessional(@Param('id', ParseIntPipe) id: number): Promise<MedicalRequestProfessional[]> {
         return this.bookingsService.findAssignmentsByProfessional(id);
+    }
+
+    @Patch(':id')
+    @ApiOperation({ summary: 'Update a medical request' })
+    @ApiResponse({ status: 200, description: 'The booking has been successfully updated.', type: MedicalRequest })
+    @ApiResponse({ status: 404, description: 'Booking not found.' })
+    async update(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() updateBookingDto: UpdateBookingDto,
+    ): Promise<MedicalRequest> {
+        return this.bookingsService.updateBooking(id, updateBookingDto);
     }
 }

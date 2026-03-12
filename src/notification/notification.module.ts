@@ -22,7 +22,8 @@ import { Resend } from 'resend';
         const apiKey = configService.get('RESEND_API_KEY');
         if (!apiKey) {
           console.warn('[NotificationModule] RESEND_API_KEY is missing. Emails will not send.');
-          return new Resend('missing_key');
+          // Return a dummy object or null to avoid crashing if handled in service
+          return null; 
         }
         return new Resend(apiKey);
       },
@@ -31,6 +32,7 @@ import { Resend } from 'resend';
     {
       provide: 'TWILIO_CLIENT',
       useFactory: (configService: ConfigService) => {
+        console.log('[NotificationModule] Initializing TWILIO_CLIENT...');
         const accountSid = configService.get('TWILIO_ACCOUNT_SID');
         const authToken = configService.get('TWILIO_AUTH_TOKEN');
         if (!accountSid || !authToken) {

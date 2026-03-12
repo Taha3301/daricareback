@@ -120,6 +120,10 @@ export class MedicalRequest {
     @Column({ type: 'float', nullable: true })
     totalPrice: number;
 
+    @ApiPropertyOptional()
+    @Column({ type: 'text', nullable: true })
+    materiel: string;
+
     @ApiProperty()
     @CreateDateColumn()
     createdAt: Date;
