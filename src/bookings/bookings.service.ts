@@ -420,6 +420,47 @@ export class BookingsService {
             await queryRunner.manager.save(request);
 
             await queryRunner.commitTransaction();
+
+            // 4. Send rating email to patient (async, non-blocking)
+            console.log(`[BookingsService] completeBooking done. patientEmail: "${request.patientEmail}"`);
+            if (request.patientEmail) {
+                const patientName = `${request.patientFirstname} ${request.patientLastname}`;
+                const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+                const ratingUrl = `${frontendUrl}/daricarefront/?view=avis#/`;
+
+                console.log(`[BookingsService] Sending rating email to ${request.patientEmail}, url: ${ratingUrl}`);
+
+                // Fetch service name for the email
+                let serviceName = 'Service';
+                try {
+                    const service = await this.dataSource.manager.findOne('Service', { where: { id: request.serviceId } }) as any;
+                    if (service?.name) serviceName = service.name;
+                } catch (_) { /* ignore */ }
+
+                // Fetch professional name for the email
+                let professionalName = 'le professionnel';
+                try {
+                    const prof = await this.dataSource.manager.findOne(Professional, { where: { id: professionalId } });
+                    if (prof?.name) professionalName = prof.name;
+                } catch (_) { /* ignore */ }
+
+                console.log(`[BookingsService] serviceName="${serviceName}", professionalName="${professionalName}"`);
+
+                this.notificationService.sendRatingEmail(
+                    request.patientEmail,
+                    patientName,
+                    professionalName,
+                    serviceName,
+                    ratingUrl,
+                ).then(() => {
+                    console.log(`[BookingsService] Rating email sent to ${request.patientEmail}`);
+                }).catch(err => {
+                    console.error('[BookingsService] Failed to send rating email:', err);
+                });
+            } else {
+                console.warn(`[BookingsService] No patientEmail on request ${requestId}, skipping rating email.`);
+            }
+
             return { requestId, status: request.status };
         } catch (err) {
             await queryRunner.rollbackTransaction();

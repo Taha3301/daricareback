@@ -362,4 +362,77 @@ export class NotificationService {
       console.log(`[NotificationService] Resend success (Rejection). ID: ${data?.id}`);
     }
   }
+
+  async sendRatingEmail(
+    patientEmail: string,
+    patientName: string,
+    professionalName: string,
+    serviceName: string,
+    ratingUrl: string,
+  ) {
+    console.log(`[NotificationService] sendRatingEmail initiated for: ${patientEmail}`);
+
+    let fromEmail = this.configService.get('SMTP_FROM') || 'onboarding@resend.dev';
+    if (fromEmail.includes('example.com')) {
+      fromEmail = 'onboarding@resend.dev';
+    }
+
+    if (!this.resend) {
+      console.warn('[NotificationService] Resend client missing. Rating email not sent.');
+      return;
+    }
+
+    const { data, error } = await this.resend.emails.send({
+      from: `DariCare <${fromEmail}>`,
+      to: patientEmail,
+      subject: 'Votre soin est terminé — Donnez votre avis ! ⭐ - DariCare',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #2c3e50; margin-top: 0;">Votre soin est terminé ✅</h2>
+
+            <p style="color: #34495e; font-size: 16px;">Bonjour <strong>${patientName}</strong>,</p>
+
+            <p style="color: #34495e; font-size: 16px;">
+              Votre intervention de <strong>${serviceName}</strong> réalisée par <strong>${professionalName}</strong> est maintenant marquée comme terminée.
+            </p>
+
+            <p style="color: #34495e; font-size: 16px;">
+              Votre avis compte énormément pour nous et pour les autres patients. Prenez 30 secondes pour noter votre expérience !
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${ratingUrl}"
+                 style="background-color: #1a73e8; color: #ffffff; padding: 14px 32px; border-radius: 8px;
+                        text-decoration: none; font-size: 18px; font-weight: bold; display: inline-block;">
+                ⭐ Donner mon avis
+              </a>
+            </div>
+
+            <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #2e7d32; margin-top: 0;">Pourquoi laisser un avis ?</h3>
+              <ul style="color: #34495e; font-size: 14px; padding-left: 20px;">
+                <li>Aidez les autres patients à choisir en toute confiance</li>
+                <li>Contribuez à améliorer la qualité de nos services</li>
+                <li>Votre retour aide nos professionnels de santé à progresser</li>
+              </ul>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+
+            <p style="color: #757575; font-size: 14px; text-align: center;">
+              Merci de votre confiance,<br>
+              <strong>L'équipe DariCare</strong>
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error(`[NotificationService] Resend error (Rating):`, error);
+    } else {
+      console.log(`[NotificationService] Resend success (Rating). ID: ${data?.id}`);
+    }
+  }
 }

@@ -17,12 +17,13 @@ import { AuthModule } from './auth/auth.module';
 import { AlertModule } from './alert/alert.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PatientsModule } from './patients/patients.module';
+import { AvisModule } from './avis/avis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
     TypeOrmModule.forRoot({
@@ -44,6 +45,7 @@ import { PatientsModule } from './patients/patients.module';
     AlertModule,
     BookingsModule,
     PatientsModule,
+    AvisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,10 +11,10 @@ import { CreateSoinDto } from '../soins/dto/create-soin.dto';
 import { Public } from '../auth/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
-const uploadDir = './uploads/services';
+const uploadDir = join(process.cwd(), 'uploads', 'services');
 if (!existsSync(uploadDir)) {
   mkdirSync(uploadDir, { recursive: true });
 }
