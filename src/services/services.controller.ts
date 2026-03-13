@@ -14,7 +14,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
-const uploadDir = join(process.cwd(), 'uploads', 'services');
+const uploadDir = join(process.cwd(), 'uploads', 's');
 if (!existsSync(uploadDir)) {
   mkdirSync(uploadDir, { recursive: true });
 }
@@ -30,6 +30,7 @@ export class ServicesController {
   ) { }
 
   @Post()
+  @Public()
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new service with an image' })
@@ -39,7 +40,7 @@ export class ServicesController {
       filename: (req, file, callback) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         const ext = extname(file.originalname);
-        callback(null, `service-${uniqueSuffix}${ext}`);
+        callback(null, `${uniqueSuffix}${ext}`);
       },
     }),
     fileFilter: (req, file, callback) => {
@@ -53,7 +54,7 @@ export class ServicesController {
     @Body() createServiceDto: CreateServiceDto,
     @UploadedFile() file: Express.Multer.File
   ) {
-    const imagePath = file ? `uploads/services/${file.filename}` : undefined;
+    const imagePath = file ? `uploads/s/${file.filename}` : undefined;
     return this.servicesService.create(createServiceDto, imagePath);
   }
 
@@ -103,6 +104,7 @@ export class ServicesController {
   }
 
   @Patch(':id')
+  @Public()
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update a service and its image' })
@@ -112,7 +114,7 @@ export class ServicesController {
       filename: (req, file, callback) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         const ext = extname(file.originalname);
-        callback(null, `service-${uniqueSuffix}${ext}`);
+        callback(null, `${uniqueSuffix}${ext}`);
       },
     }),
     fileFilter: (req, file, callback) => {
@@ -127,7 +129,7 @@ export class ServicesController {
     @Body() updateServiceDto: UpdateServiceDto,
     @UploadedFile() file?: Express.Multer.File
   ) {
-    const imagePath = file ? `uploads/services/${file.filename}` : undefined;
+    const imagePath = file ? `uploads/s/${file.filename}` : undefined;
     return this.servicesService.update(+id, updateServiceDto, imagePath);
   }
 

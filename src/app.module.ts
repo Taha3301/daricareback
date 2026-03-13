@@ -25,6 +25,9 @@ import { AvisModule } from './avis/avis.module';
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
+      serveStaticOptions: {
+        index: false,
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

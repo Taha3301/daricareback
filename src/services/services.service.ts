@@ -30,7 +30,7 @@ export class ServicesService {
   }
 
   async findAll() {
-    return await this.serviceRepository.find({
+    const services = await this.serviceRepository.find({
       relations: [
         'soins',
         'soins.checkboxes',
@@ -39,10 +39,12 @@ export class ServicesService {
         'soins.texts'
       ]
     });
+    return services.map(s => this.mapServiceImage(s));
   }
 
   async findAllOnly() {
-    return await this.serviceRepository.find();
+    const services = await this.serviceRepository.find();
+    return services.map(s => this.mapServiceImage(s));
   }
 
   async findOne(id: number) {
@@ -59,7 +61,7 @@ export class ServicesService {
     if (!service) {
       throw new NotFoundException(`Service with ID ${id} not found`);
     }
-    return service;
+    return this.mapServiceImage(service);
   }
 
   async findByName(name: string) {
@@ -79,7 +81,7 @@ export class ServicesService {
     if (!service) {
       throw new NotFoundException(`Service with name ${name} not found`);
     }
-    return service;
+    return this.mapServiceImage(service);
   }
 
   async findByProfessionalSpeciality(userId: number) {
@@ -118,7 +120,7 @@ export class ServicesService {
     });
 
     return {
-      ...service,
+      ...this.mapServiceImage(service),
       medicalRequestDocuments
     };
   }
@@ -148,5 +150,13 @@ export class ServicesService {
   async remove(id: number) {
     const service = await this.findOne(id);
     return await this.serviceRepository.remove(service);
+  }
+
+  private mapServiceImage(service: Service) {
+    if (!service) return service;
+    return {
+      ...service,
+      image: service.image?.replace('uploads/services/', 'uploads/s/')
+    };
   }
 }
