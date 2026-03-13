@@ -18,6 +18,7 @@ import { AlertModule } from './alert/alert.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PatientsModule } from './patients/patients.module';
 import { AvisModule } from './avis/avis.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AvisModule } from './avis/avis.module';
       serveRoot: '/uploads',
       serveStaticOptions: {
         index: false,
+        fallthrough: false,
       },
     }),
     TypeOrmModule.forRoot({
@@ -49,6 +51,7 @@ import { AvisModule } from './avis/avis.module';
     BookingsModule,
     PatientsModule,
     AvisModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

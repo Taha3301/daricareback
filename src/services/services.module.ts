@@ -6,12 +6,14 @@ import { Service } from './services.entity';
 import { SoinsModule } from '../soins/soins.module';
 import { ProfessionalModule } from '../professional/professional.module';
 import { RequestDocument } from '../bookings/entities/request-document.entity';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Service, RequestDocument]),
     SoinsModule,
     ProfessionalModule,
+    CloudinaryModule,
   ],
   controllers: [ServicesController],
   providers: [ServicesService],

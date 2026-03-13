@@ -10,14 +10,7 @@ import { SoinsService } from '../soins/soins.service';
 import { CreateSoinDto } from '../soins/dto/create-soin.dto';
 import { Public } from '../auth/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-
-const uploadDir = join(process.cwd(), 'uploads', 's');
-if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true });
-}
+import { memoryStorage } from 'multer';
 
 @ApiTags('Services')
 @Controller('services')
@@ -35,14 +28,7 @@ export class ServicesController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new service with an image' })
   @UseInterceptors(FileInterceptor('image', {
-    storage: diskStorage({
-      destination: uploadDir,
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        callback(null, `${uniqueSuffix}${ext}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, callback) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
         return callback(new Error('Only images are allowed!'), false);
@@ -54,8 +40,7 @@ export class ServicesController {
     @Body() createServiceDto: CreateServiceDto,
     @UploadedFile() file: Express.Multer.File
   ) {
-    const imagePath = file ? `uploads/s/${file.filename}` : undefined;
-    return this.servicesService.create(createServiceDto, imagePath);
+    return this.servicesService.create(createServiceDto, file);
   }
 
   @Post(':id/soins')
@@ -109,14 +94,7 @@ export class ServicesController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update a service and its image' })
   @UseInterceptors(FileInterceptor('image', {
-    storage: diskStorage({
-      destination: uploadDir,
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        callback(null, `${uniqueSuffix}${ext}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, callback) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
         return callback(new Error('Only images are allowed!'), false);
@@ -129,8 +107,7 @@ export class ServicesController {
     @Body() updateServiceDto: UpdateServiceDto,
     @UploadedFile() file?: Express.Multer.File
   ) {
-    const imagePath = file ? `uploads/s/${file.filename}` : undefined;
-    return this.servicesService.update(+id, updateServiceDto, imagePath);
+    return this.servicesService.update(+id, updateServiceDto, file);
   }
 
   @Delete(':id')

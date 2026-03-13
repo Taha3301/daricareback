@@ -4,9 +4,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { memoryStorage } from 'multer';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -14,11 +12,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-// Ensure upload directory exists
-const uploadDir = './uploads/documents';
-if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true });
-}
+
 
 @ApiTags('Documents')
 @Controller('documents')
@@ -58,14 +52,7 @@ export class DocumentsController {
     },
   })
   @UseInterceptors(FilesInterceptor('files', 10, {
-    storage: diskStorage({
-      destination: uploadDir,
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, callback) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png|pdf)$/)) {
         return callback(new BadRequestException('Only images and PDFs are allowed!'), false);
@@ -80,9 +67,8 @@ export class DocumentsController {
     if (!files || files.length === 0) {
       throw new BadRequestException('At least one file is required');
     }
-    // Save the relative paths in the database
-    const filePaths = files.map(file => `uploads/documents/${file.filename}`);
-    return this.documentsService.create(createDocumentDto, filePaths);
+    // Pass the file buffers to the service
+    return this.documentsService.create(createDocumentDto, files);
   }
 
   @Get()
@@ -124,14 +110,7 @@ export class DocumentsController {
     },
   })
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: uploadDir,
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = extname(file.originalname);
-        callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-      },
-    }),
+    storage: memoryStorage(),
     fileFilter: (req, file, callback) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png|pdf)$/)) {
         return callback(new BadRequestException('Only images and PDFs are allowed!'), false);
@@ -144,8 +123,7 @@ export class DocumentsController {
     @Body() updateDocumentDto: UpdateDocumentDto,
     @UploadedFile() file?: Express.Multer.File
   ) {
-    const newFilePath = file ? `uploads/documents/${file.filename}` : undefined;
-    return this.documentsService.update(+id, updateDocumentDto, newFilePath);
+    return this.documentsService.update(+id, updateDocumentDto, file);
   }
 
   @Delete(':id')

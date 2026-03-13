@@ -6,9 +6,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { Service } from './services.entity';
 import { Professional } from '../professional/entities/professional.entity';
 import { RequestDocument } from '../bookings/entities/request-document.entity';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ServicesService {
@@ -19,9 +17,16 @@ export class ServicesService {
     private readonly professionalRepository: Repository<Professional>,
     @InjectRepository(RequestDocument)
     private readonly requestDocumentRepository: Repository<RequestDocument>,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
-  async create(createServiceDto: CreateServiceDto, imagePath?: string) {
+  async create(createServiceDto: CreateServiceDto, file?: Express.Multer.File) {
+    let imagePath = undefined;
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadFile(file, 'daricare_services');
+      imagePath = uploadResult.secure_url;
+    }
+
     const service = this.serviceRepository.create({
       ...createServiceDto,
       image: imagePath,
@@ -125,24 +130,31 @@ export class ServicesService {
     };
   }
 
-  async update(id: number, updateServiceDto: UpdateServiceDto, imagePath?: string) {
+  async update(id: number, updateServiceDto: UpdateServiceDto, file?: Express.Multer.File) {
     const service = await this.findOne(id);
+    let imagePath = service.image;
 
-    if (imagePath && service.image) {
-      // Delete old image if it exists
-      const oldPath = join(process.cwd(), service.image);
-      if (existsSync(oldPath)) {
-        try {
-          await unlink(oldPath);
-        } catch (err) {
-          console.error(`Failed to delete old service image: ${oldPath}`, err);
+    if (file) {
+      // Delete old image if it exists on Cloudinary
+      if (service.image && service.image.includes('cloudinary.com')) {
+        const publicIdMatch = service.image.match(/\/v\d+\/daricare_services\/([^\.]+)/);
+        if (publicIdMatch && publicIdMatch[1]) {
+           try {
+             await this.cloudinaryService.deleteFile(`daricare_services/${publicIdMatch[1]}`);
+           } catch (err) {
+             console.error(`Failed to delete old service image from Cloudinary`, err);
+           }
         }
       }
+
+      // Upload new image
+      const uploadResult = await this.cloudinaryService.uploadFile(file, 'daricare_services');
+      imagePath = uploadResult.secure_url;
     }
 
     const updated = Object.assign(service, {
       ...updateServiceDto,
-      image: imagePath || service.image,
+      image: imagePath,
     });
     return await this.serviceRepository.save(updated);
   }

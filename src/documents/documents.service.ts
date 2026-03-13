@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { unlinkSync } from 'fs';
-import { join } from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Document } from './documents.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { Professional, ProfessionalStatus } from '../professional/entities/professional.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class DocumentsService {
@@ -15,23 +14,30 @@ export class DocumentsService {
     private documentRepository: Repository<Document>,
     @InjectRepository(Professional)
     private proRepository: Repository<Professional>,
+    private cloudinaryService: CloudinaryService,
   ) { }
 
-  async create(createDocumentDto: CreateDocumentDto, filePaths: string[]) {
+  async create(createDocumentDto: CreateDocumentDto, files: Express.Multer.File[]) {
     const { type, professionalId, description } = createDocumentDto;
 
     // Normalize into arrays to handle both single and batch uploads
     const types = Array.isArray(type) ? type : [type];
     const descriptions = Array.isArray(description) ? description : [description];
 
-    const documents = filePaths.map((filePath, index) =>
-      this.documentRepository.create({
-        type: types[index] || types[0] || 'Unknown',
-        filePath,
-        description: descriptions[index] || descriptions[0],
+    const documents = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const uploadResult = await this.cloudinaryService.uploadFile(file, 'daricare_documents');
+
+      const doc = this.documentRepository.create({
+        type: types[i] || types[0] || 'Unknown',
+        filePath: uploadResult.secure_url,
+        description: descriptions[i] || descriptions[0],
         professionalId: Number(professionalId),
-      })
-    );
+      });
+      documents.push(doc);
+    }
+    
     return this.documentRepository.save(documents);
   }
 
@@ -57,18 +63,24 @@ export class DocumentsService {
     return document;
   }
 
-  async update(id: number, updateDocumentDto: UpdateDocumentDto, newFilePath?: string) {
+  async update(id: number, updateDocumentDto: UpdateDocumentDto, file?: Express.Multer.File) {
     const document = await this.findOne(id);
 
-    if (newFilePath && document.filePath) {
-      // Delete old physical file
-      try {
-        const oldPath = join(process.cwd(), document.filePath);
-        unlinkSync(oldPath);
-      } catch (error) {
-        console.error(`Failed to delete old file: ${document.filePath}`, error);
+    if (file) {
+      // Delete old file from Cloudinary
+      if (document.filePath && document.filePath.includes('cloudinary.com')) {
+        const publicIdMatch = document.filePath.match(/\/v\d+\/daricare_documents\/([^\.]+)/);
+        if (publicIdMatch && publicIdMatch[1]) {
+           try {
+             await this.cloudinaryService.deleteFile(`daricare_documents/${publicIdMatch[1]}`);
+           } catch (err) {
+             console.error(`Failed to delete old document from Cloudinary`, err);
+           }
+        }
       }
-      document.filePath = newFilePath;
+      
+      const uploadResult = await this.cloudinaryService.uploadFile(file, 'daricare_documents');
+      document.filePath = uploadResult.secure_url;
     }
 
     const updated = Object.assign(document, updateDocumentDto);
@@ -78,12 +90,16 @@ export class DocumentsService {
   async remove(id: number) {
     const document = await this.findOne(id);
 
-    // Delete physical file
-    try {
-      const fullPath = join(process.cwd(), document.filePath);
-      unlinkSync(fullPath);
-    } catch (error) {
-      console.error(`Failed to delete file: ${document.filePath}`, error);
+    // Delete file from Cloudinary
+    if (document.filePath && document.filePath.includes('cloudinary.com')) {
+      const publicIdMatch = document.filePath.match(/\/v\d+\/daricare_documents\/([^\.]+)/);
+      if (publicIdMatch && publicIdMatch[1]) {
+         try {
+           await this.cloudinaryService.deleteFile(`daricare_documents/${publicIdMatch[1]}`);
+         } catch (err) {
+           console.error(`Failed to delete document from Cloudinary`, err);
+         }
+      }
     }
 
     await this.documentRepository.remove(document);
